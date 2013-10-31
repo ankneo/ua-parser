@@ -11,7 +11,7 @@ ua.make_parser = function(regexes,re)
 
     local function parser(str) 
       local m = re.match(str,regexp)
-      if #m ==0 then return nil end
+      if m==nil then return nil end
       local family = (fam_rep and fam_rep:gsub('$1', m[1]) or m[1]) or "Other"
       local major = major_rep or m[2]
       local minor = minor_rep or m[3]
