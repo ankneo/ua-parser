@@ -1,31 +1,30 @@
 local ua_parser = {}
-local yaml = require 'yaml'
-local file = io.open("../regexes.yaml","r")
-if not file then
-  if ngx then
-    file = io.open(ngx.var.regexes)
-  end
+
+local cjson = require 'cjson'
+
+local REGEXESDICT = ngx.shared.REGEXES
+
+local regexes, flags = REGEXESDICT:get("regexes")
+
+if not regexes then
+        ngx.log(ngx.WARN, "Failed to retrieve data from REGEXES DICT")
+    else
+        regexes = cjson.decode(regexes)
 end
-local regexes = yaml.load(file:read("*all"))
--- local pretty = require 'pl.tablex'
-file:close()
-local re
-if ngx then
-  re = ngx.re
-else
-  re = require("rex_pcre")
-  local old_match = re.match
-  re.match = function ( ... )
-    local results={old_match(...)}
-    for i,v in ipairs(results) do
-      if v==false then
-        results[i]=nil
-      end
+
+if not regexes then
+    local yaml = require 'yaml'
+    local file = io.open("./regexes.yaml","r")
+    regexes = yaml.load(file:read("*all"))
+    file:close()
+
+    local ok, err, forcible = REGEXESDICT:set("regexes", cjson.encode(regexes))
+    if not ok then
+        ngx.log(ngx.WARN, "Unable to store data in REGEXES DICT : ",err)
     end
-    if #results==0 then return nil end
-    return results
-  end
 end
+
+local re = ngx.re
 local device=  require(".ua-parser.device")
 
 local parse_ua = require(".ua-parser.ua").make_parser(regexes.user_agent_parsers,re)
