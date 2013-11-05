@@ -25,13 +25,12 @@ device.make_parser = function(regexes,re)
         return obj
       end
     end
-    return obj or {family="Other"};
+    return obj or {family="Desktop"};
   end
 
   return parser
 end
-local tablex = require 'pl.tablex'
-local pretty  = require 'pl.pretty'
+
 local MOBILE_DEVICE_LIST = {
   "Playstation Portable",
   "Playstation Vita",
@@ -70,6 +69,15 @@ local TABLET_LIST = {
 
 }
 
+local function table_find(hay, needle)
+    for _, v in ipairs(hay) do
+        if v == needle  then
+            return true
+        end
+    end
+    return false
+end
+
 -- local function is_psp(family)
 --   if family == "Playstation Portable" or
 --     family == "Playstation Vita" then
@@ -83,18 +91,17 @@ local function is_surface(ua,re)
 end
 local function detect_mobile(ua,re)
   return re.match(ua.ua_string,"(Mobi(le)?|Symbian|MIDP|Windows CE|BREW|brew|J2ME|Brew MP)") or 
-    ua.ua.family=="Opera Mini" or
-    tablex.find(MOBILE_DEVICE_LIST,ua.device.family)
+    ua.ua.family=="Opera Mini" or table_find(MOBILE_DEVICE_LIST,ua.device.family)
 end
 local function is_tablet(ua,re)
-    return (tablex.find(TABLET_LIST,ua.device.family) or 
+    return (table_find(TABLET_LIST,ua.device.family) or
       (ua.os.family=="Android" and not detect_mobile(ua,re)) or is_surface(ua,re))
 end
 local function is_mobile(ua,re)
   return detect_mobile(ua,re) and not is_tablet(ua,re)
 end
 local function is_television( ua,re )
-  return tablex.find(TELEVISION_DEVICE_LIST,ua.device.family)
+  return table_find(TELEVISION_DEVICE_LIST,ua.device.family)
 end
 function device.discover_device_type(ua,re)
 
@@ -109,9 +116,8 @@ function device.discover_device_type(ua,re)
   elseif is_mobile(ua,re) then
     return "mobile"
   else
-    return "other"
+    return "desktop"
   end
 end
 
 return device 
-
